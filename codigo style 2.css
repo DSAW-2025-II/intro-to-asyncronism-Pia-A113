@@ -1,0 +1,51 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #43aefb;
+}
+#pokemon-details {
+  max-width: 3000px;
+  max-height: 1000px;
+  margin: auto;
+  padding: 20px;
+  border: 2px solid #222; /* Adjusted border style */
+  border-radius: 15px;
+  background-color: #f9f9f9;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+#pokemon-details img {
+  max-width: 1200px;
+  display: block;
+  margin: 15px auto;
+}
+h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+/* Styles for animated stat bars */
+.stat {
+  margin-bottom: 10px;
+}
+.stat-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.progress-container {
+  background-color: #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 20px;
+}
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background-color: #4caf50;
+  transition: width 1.5s ease-in-out;
+}
+/* Optional: different colors for each stat */
+.hp { background-color: #ff55cc; }
+.attack { background-color: #9c0fcf; }
+.defense { background-color: #2196f3; }
+.special-attack { background-color: #1bc594; }
+.special-defense { background-color: #f99807; }
+.speed { background-color: #8bc34a; }

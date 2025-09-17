@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="codigo style 2.css" />
+<title>Detalles de Pokémon</title>
+</head>
+<body>
+
+<div id="pokemon-details">Cargando detalles...</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const detailsContainer = document.getElementById('pokemon-details');
+  const id = localStorage.getItem('selectedPokemonId');
+
+  if (!id) {
+    detailsContainer.innerText = 'No Pokémon selected.';
+    return;
+  }
+
+  async function getPokemonDetails(id) {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+    return response.json();
+  }
+
+  async function getPokemonSpecies(id) {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+    return response.json();
+  }
+
+  async function displayDetails() {
+    try {
+      const [pokemon, species] = await Promise.all([
+        getPokemonDetails(id),
+        getPokemonSpecies(id)
+      ]);
+
+      const name = capitalizeFirstLetter(pokemon.name);
+      const imageUrl = pokemon.sprites.front_default || '';
+
+      const flavorTextEntry = species.flavor_text_entries.find(
+        entry => entry.language.name === 'en'
+      );
+      const description = flavorTextEntry
+        ? flavorTextEntry.flavor_text.replace(/\n|\f/g, ' ')
+        : 'No description available.';
+
+      // Parse evolution chain
+      const evolutionResponse = await fetch(species.evolution_chain.url);
+      const evolutionData = await evolutionResponse.json();
+
+      function parseEvolutionChain(chain) {
+        const names = [];
+        let current = chain;
+        while (current) {
+          names.push(current.species.name);
+          current = current.evolves_to[0];
+        }
+        return names;
+      }
+      const evolutions = parseEvolutionChain(evolutionData.chain);
+
+      // Compose HTML
+      detailsContainer.innerHTML = `
+        <h2>${name} (#${String(pokemon.id).padStart(3, '0')})</h2>
+        <img src="${imageUrl}" alt="${name}" />
+        <p><strong>Description:</strong> ${description}</p>
+        <p><strong>Types:</strong> ${pokemon.types.map(t => capitalizeFirstLetter(t.type.name)).join(', ')}</p>
+        <p><strong>Abilities:</strong> ${pokemon.abilities.map(a => capitalizeFirstLetter(a.ability.name)).join(', ')}</p>
+        <p><strong>Evolution Chain:</strong> ${evolutions.map(n => capitalizeFirstLetter(n)).join(' → ')}</p>
+        <h3>Stats:</h3>
+        <div id="stats"></div>
+        <!-- Removed back button -->
+      `;
+
+      // Animate stats bars
+      const statsDiv = document.getElementById('stats');
+      pokemon.stats.forEach(s => {
+        const statName = s.stat.name;
+        const baseStat = s.base_stat;
+
+        const statDiv = document.createElement('div');
+        statDiv.className = 'stat';
+
+        const statLabel = document.createElement('div');
+        statLabel.className = 'stat-name';
+        statLabel.innerText = capitalizeFirstLetter(statName);
+
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'progress-container';
+
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+
+        // Additional classes for colors
+        if (statName === 'hp') progressBar.classList.add('hp');
+        if (statName === 'attack') progressBar.classList.add('attack');
+        if (statName === 'defense') progressBar.classList.add('defense');
+        if (statName === 'special-attack') progressBar.classList.add('special-attack');
+        if (statName === 'special-defense') progressBar.classList.add('special-defense');
+        if (statName === 'speed') progressBar.classList.add('speed');
+
+        progressContainer.appendChild(progressBar);
+        statDiv.appendChild(statLabel);
+        statDiv.appendChild(progressContainer);
+        statsDiv.appendChild(statDiv);
+
+        // Animate the width after a short delay
+        setTimeout(() => {
+          progressBar.style.width = `${baseStat}%`;
+        }, 100);
+      });
+    } catch (error) {
+      detailsContainer.innerText = 'Error loading Pokémon details.';
+      console.error(error);
+    }
+  }
+
+  function capitalizeFirstLetter(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  displayDetails();
+});
+</script>
+
+</body>
+</html>
